@@ -70,9 +70,7 @@ vector<int> LinuxParser::Pids() {
 
 // TODO: Read and return the system memory utilization
 float LinuxParser::MemoryUtilization() {
-  long total_memory{0};
-  long utilized_memory{0};
-  string line, data;
+  string line, data, total_memory, free_memory;
   std::istringstream linestream;
   std::ifstream stream(kProcDirectory + kMeminfoFilename);
   if (stream.is_open()) {
@@ -82,16 +80,17 @@ float LinuxParser::MemoryUtilization() {
     std::getline(stream, line);
     linestream.clear();
     linestream.str(line);
-    linestream >> data >> utilized_memory >> data;
+    linestream >> data >> free_memory >> data;
   }
-  return (float)(total_memory - utilized_memory)/(float)total_memory;
+  if (total_memory != "" && free_memory != "") {
+    return (float)(std::stol(total_memory) - std::stol(free_memory))/(float)std::stol(total_memory);
+  }
+  
  }
 
 // TODO: Read and return the system uptime
 long LinuxParser::UpTime() { 
-  long system{0};
-  long process{0};
-  string line;
+  string line, system, process;
   std::istringstream linestream;
   std::ifstream stream(kProcDirectory + kUptimeFilename);
   if (stream.is_open()) {
@@ -99,7 +98,8 @@ long LinuxParser::UpTime() {
     linestream.str(line);
     linestream >> system >> process;
   }
-  return system;
+  if (system != "" ) {return std::stol(system);}
+  return 0;
  }
 
 // TODO: Read and return the number of jiffies for the system
@@ -126,7 +126,8 @@ long LinuxParser::ActiveJiffies(int pid) {
       values.push_back(value);
     }
   }
-  return std::stol(values[13]) + std::stol(values[14]);
+  if(values[13] != "" && values[14] != "") {return std::stol(values[13]) + std::stol(values[14]);}
+  else return 0;
  }
 
 // TODO: Read and return the number of active jiffies for the system
@@ -153,7 +154,7 @@ vector<string> LinuxParser::CpuUtilization() {
     linestream.str(line);
     linestream >> value;
     while (linestream >> value) {
-      values.push_back(value);
+      if (value != "") {values.push_back(value);}
     }
   }
   return values;
@@ -170,7 +171,7 @@ int LinuxParser::TotalProcesses() {
       linestream.str(line);
       while (linestream >> key >> value) {
         if (key == "processes") {
-          return std::stoi(value);
+          if (value != "") {return std::stoi(value); }
         }
       }
     }
@@ -189,7 +190,7 @@ int LinuxParser::RunningProcesses() {
       linestream.str(line);
       while (linestream >> key >> value) {
         if (key == "procs_running") {
-          return std::stoi(value);
+          if (value != "") {return std::stoi(value); }
         }
       }
     }
@@ -227,7 +228,7 @@ string LinuxParser::Ram(int pid) {
       }
     }
   }
-  return value;
+  return "Error";
  }
 
 // TODO: Read and return the user ID associated with a process
@@ -248,7 +249,7 @@ string LinuxParser::Uid(int pid) {
       }
     }
   }
-  return value;
+  return "Error";
  }
 
 // TODO: Read and return the user associated with a process
@@ -287,6 +288,9 @@ long LinuxParser::UpTime(int pid) {
       values.push_back(value);
     }
   }
-  return std::stol(values[21]);
+  if (values[21] != "")
+    return std::stol(values[21]);
+  else
+    return 0;
  }
 
