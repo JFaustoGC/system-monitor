@@ -85,7 +85,9 @@ float LinuxParser::MemoryUtilization() {
   if (total_memory != "" && free_memory != "") {
     return (float)(std::stol(total_memory) - std::stol(free_memory))/(float)std::stol(total_memory);
   }
-  
+  else {
+    return 0;
+  }
  }
 
 // TODO: Read and return the system uptime
