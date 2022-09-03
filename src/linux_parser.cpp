@@ -85,9 +85,7 @@ float LinuxParser::MemoryUtilization() {
   if (total_memory != "" && free_memory != "") {
     return (float)(std::stol(total_memory) - std::stol(free_memory))/(float)std::stol(total_memory);
   }
-  else {
-    return 0;
-  }
+  return 0;
  }
 
 // TODO: Read and return the system uptime
@@ -225,12 +223,12 @@ string LinuxParser::Ram(int pid) {
       linestream.str(line);
       while(linestream >> key >> value) {
         if (key == "VmSize") {
-          return value;
+          return std::to_string((long)(std::stol(value) / 1024));
         }
       }
     }
   }
-  return "Error";
+  return "0";
  }
 
 // TODO: Read and return the user ID associated with a process
@@ -291,7 +289,7 @@ long LinuxParser::UpTime(int pid) {
     }
   }
   if (values[21] != "")
-    return std::stol(values[21]);
+    return LinuxParser::UpTime() - std::stol(values[21]);
   else
     return 0;
  }
