@@ -32,6 +32,7 @@ string LinuxParser::OperatingSystem() {
       }
     }
   }
+  filestream.close();
   return value;
 }
 
@@ -45,6 +46,7 @@ string LinuxParser::Kernel() {
     std::istringstream linestream(line);
     linestream >> os >> version >> kernel;
   }
+  stream.close();
   return kernel;
 }
 
@@ -82,6 +84,7 @@ float LinuxParser::MemoryUtilization() {
     linestream.str(line);
     linestream >> data >> free_memory >> data;
   }
+  stream.close();
   if (total_memory != "" && free_memory != "") {
     return (float)(std::stol(total_memory) - std::stol(free_memory))/(float)std::stol(total_memory);
   }
@@ -98,6 +101,7 @@ long LinuxParser::UpTime() {
     linestream.str(line);
     linestream >> system >> process;
   }
+  stream.close();
   if (system != "" ) {return std::stol(system);}
   return 0;
  }
@@ -126,6 +130,7 @@ long LinuxParser::ActiveJiffies(int pid) {
       values.push_back(value);
     }
   }
+  stream.close();
   if(values[13] != "" && values[14] != "") {return std::stol(values[13]) + std::stol(values[14]);}
   else return 0;
  }
@@ -157,6 +162,7 @@ vector<string> LinuxParser::CpuUtilization() {
       if (value != "") {values.push_back(value);}
     }
   }
+  stream.close();
   return values;
  }
 
@@ -171,7 +177,10 @@ int LinuxParser::TotalProcesses() {
       linestream.str(line);
       while (linestream >> key >> value) {
         if (key == "processes") {
-          if (value != "") {return std::stoi(value); }
+          if (value != "") {
+            stream.close();
+            return std::stoi(value);
+             }
         }
       }
     }
@@ -190,7 +199,9 @@ int LinuxParser::RunningProcesses() {
       linestream.str(line);
       while (linestream >> key >> value) {
         if (key == "procs_running") {
-          if (value != "") {return std::stoi(value); }
+          if (value != "") {
+            stream.close();
+            return std::stoi(value); }
         }
       }
     }
@@ -222,7 +233,8 @@ string LinuxParser::Ram(int pid) {
       linestream.clear();
       linestream.str(line);
       while(linestream >> key >> value) {
-        if (key == "VmSize") {
+        if (key == "VmRSS") { //Replaced VmSize for VmRSS since it gives the exact physical memory
+          stream.close();
           return std::to_string((long)(std::stol(value) / 1024));
         }
       }
@@ -244,6 +256,7 @@ string LinuxParser::Uid(int pid) {
       linestream.str(line);
       while(linestream >> key >> value) {
         if (key == "Uid") {
+          stream.close();
           return value;
         }
       }
@@ -266,6 +279,7 @@ string LinuxParser::User(int pid) {
       linestream.str(line);
       while(linestream >> value >> data >> key) {
         if (key == userid) {
+          stream.close();
           return value;
         }
       }
@@ -288,8 +302,12 @@ long LinuxParser::UpTime(int pid) {
       values.push_back(value);
     }
   }
-  if (values[21] != "")
-    return LinuxParser::UpTime() - std::stol(values[21]);
+  stream.close();
+  if (values[21] != ""){
+    long freq = sysconf(_SC_CLK_TCK);
+    long seconds = std::stol(values[21]) / freq;
+    return LinuxParser::UpTime() - seconds;
+  }
   else
     return 0;
  }
